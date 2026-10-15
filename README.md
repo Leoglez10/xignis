@@ -8,7 +8,7 @@
 
 ![React](https://img.shields.io/badge/React-18.3-black?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-5.3-black?logo=vite)
-![OGL](https://img.shields.io/badge/WebGL-OGL%201.0-black)
+![Three.js](https://img.shields.io/badge/WebGL-Three.js%200.170-black)
 ![Estado](https://img.shields.io/badge/estado-en%20construcción-08EF01)
 
 </div>
@@ -24,7 +24,7 @@
 - [Cómo ejecutarlo](#-cómo-ejecutarlo)
 - [Scripts disponibles](#-scripts-disponibles)
 - [Estructura del proyecto](#-estructura-del-proyecto)
-- [Los dos componentes principales](#-los-dos-componentes-principales)
+- [El componente principal](#-el-componente-principal)
 - [Identidad visual](#-identidad-visual)
 - [Cómo cambiar el contenido](#-cómo-cambiar-el-contenido)
 - [Publicación](#-publicación)
@@ -54,14 +54,13 @@ El paquete se llama `landing-xignis` en `package.json`.
 
 La pantalla completa muestra, sobre fondo negro:
 
-- ✅ Un haz de luz animado que cae desde arriba y reacciona al movimiento del ratón.
-- ✅ La palabra **Xignis** como título, con letras que se deforman según dónde esté el cursor.
+- ✅ El logotipo **Xignis** como wordmark 3D, con letras extruidas y biseladas
+  que flotan y derivan ligeramente hacia el cursor.
+- ✅ Un halo verde suave detrás del logotipo, que late muy despacio.
 - ✅ La leyenda **Proximamente** en la parte inferior.
 
 Todo el texto y los ajustes visuales están definidos en
 [`src/App.jsx`](src/App.jsx).
-
-> _(Captura de pantalla: pendiente. El repositorio no incluye imágenes del sitio en funcionamiento.)_
 
 ---
 
@@ -135,59 +134,77 @@ xignis/
 ├── package.json
 ├── icon.png                      ← Copia del icono en la raíz
 ├── public/
-│   └── icon.png                  ← Favicon servido en /icon.png
+│   ├── icon.png                  ← Favicon servido en /icon.png
+│   └── xignis-wordmark-mask.png  ← Máscara del wordmark que se extruye en 3D
+├── scripts/
+│   └── build-logo-mask.py        ← Regenera esa máscara a partir de icon.png
 └── src/
     ├── main.jsx                  ← Punto de entrada; monta React en #root
     ├── App.jsx                   ← ⭐ Contenido y ajustes visuales de la página
     ├── index.css                 ← Variables de color y reset global
     └── components/
-        ├── LightRays.jsx         ← Fondo animado en WebGL
+        ├── Logo3D.jsx            ← Wordmark 3D flotante (Three.js)
+        ├── LightRays.jsx         ← Sin usar. Fondo de haces de luz con OGL
         ├── LightRays.css
-        └── TextPressure.jsx      ← Título tipográfico interactivo
+        └── TextPressure.jsx      ← Sin usar. Título tipográfico interactivo
 ```
 
 > 💡 **Regla rápida**
 > - Texto y colores de la página → `src/App.jsx`
-> - Fondo animado → `src/components/LightRays.jsx`
-> - Título interactivo → `src/components/TextPressure.jsx`
+> - Wordmark 3D, materiales y animación → `src/components/Logo3D.jsx`
+> - Forma de las letras 3D → `public/xignis-wordmark-mask.png`, regenerable con
+>   `python3 scripts/build-logo-mask.py`
 > - Colores globales y tipografía → `src/index.css` e `index.html`
 
 ---
 
-## 🧩 Los dos componentes principales
+## 🧩 El componente principal
 
-### `LightRays.jsx` — fondo animado
+### `Logo3D.jsx` — wordmark 3D flotante
 
-Dibuja los haces de luz con **OGL**, una biblioteca ligera de WebGL. Renderiza un
-único triángulo a pantalla completa y hace todo el trabajo visual en un
-*fragment shader*.
+Es lo que sustituye a la animación anterior. Dibuja el logotipo con **Three.js**.
 
-Acepta props para controlar el efecto. Los valores que usa la página están en
+**Cómo funciona.** Las letras no son texto 3D: el logotipo se convierte en un mapa
+de alturas. El script [`scripts/build-logo-mask.py`](scripts/build-logo-mask.py)
+recorta el wordmark de `public/icon.png` y guarda una máscara en escala de grises
+(blanco = letra, negro = fondo) en `public/xignis-wordmark-mask.png`. Esa máscara
+se desplaza sobre un plano subdividido denso, así que cada letra es geometría
+real con bisel redondeado, no un sprite plano.
+
+Dos detalles que importan si se toca el archivo:
+
+- La máscara se usa **además como recorte** (`alphaMap`). Sin eso, el espacio
+  entre letras seguiría sombreando como metal y el logo se vería como un rectángulo
+  verde sólido en lugar de letras sueltas.
+- El sombreado usa **normales por fragmento** calculadas a partir de la máscara,
+  no las normales del vértice. Un trazo mide unas diez celdas de malla, así que con
+  normales de vértice el bisel se ve facetado, especialmente en el punto de la `i`.
+
+Acepta props para controlar el resultado. Los valores que usa la página están en
 `src/App.jsx`:
 
 | Prop | Valor en la página | Para qué sirve |
 |---|---|---|
-| `raysOrigin` | `top-center` | Desde dónde nacen los rayos. |
-| `raysColor` | `#08EF01` | Color de los rayos. |
-| `raysSpeed` | `0.6` | Velocidad de la animación. |
-| `lightSpread` | `0.8` | Apertura del haz. |
-| `rayLength` | `1.2` | Longitud de los rayos. |
-| `followMouse` | `true` | Si el haz sigue al cursor. |
-| `mouseInfluence` | `0.1` | Cuánto lo desvía el cursor. |
-| `noiseAmount` | `0.05` | Grano añadido a la imagen. |
-| `distortion` | `0.05` | Deformación del haz. |
+| `color` | `#08EF01` | Color del metal y de la luz de contra. |
+| `glowColor` | `#08EF01` | Color del halo de fondo. |
+| `glow` | `true` | Enciende o apaga el halo. |
+| `depth` | `0.42` | Profundidad de la extrusión. |
+| `floatIntensity` | `1` | Amplitud del flotado y del latido del halo. `0` lo deja quieto. |
+| `parallax` | `0.22` | Cuánto gira el logo siguiendo el cursor. |
+| `metalness` | `0.72` | Material del logo. |
+| `roughness` | `0.24` | Material del logo. |
+| `background` | `#020401` | Color de fondo del canvas. |
 
-El componente admite además otros orígenes (`top-left`, `left`, `right`,
-`bottom-left`, `bottom-center`, `bottom-right`) y props adicionales; el listado
-completo está en la firma del componente en
-[`src/components/LightRays.jsx`](src/components/LightRays.jsx).
+La animación es deliberadamente leve: un flotado vertical, una rotación lenta en
+los tres ejes y un paralaje amortiguado hacia el puntero. Con
+`prefers-reduced-motion: reduce` el flotado se desactiva y el paralaje se queda
+en cero.
 
-### `TextPressure.jsx` — título interactivo
+### Componentes sin uso
 
-Renderiza cada letra por separado y ajusta su ancho, grosor e inclinación según
-la distancia al cursor. En la página se usa con el texto `Xignis`, color
-`#08EF01`, tamaño mínimo de 36 px y las variaciones de ancho, peso e itálica
-activadas.
+`LightRays.jsx`, `LightRays.css` y `TextPressure.jsx` ya no se importan. Se
+mantienen en el repositorio, pero nada los carga; ver
+[Limitaciones actuales](#️-limitaciones-actuales).
 
 ---
 
@@ -213,9 +230,12 @@ Definida en [`src/index.css`](src/index.css) e [`index.html`](index.html):
 | Quiero cambiar… | Archivo | Dónde |
 |---|---|---|
 | El texto "Proximamente" | `src/App.jsx` | Dentro de `<p style={styles.tagline}>` |
-| La palabra del título | `src/App.jsx` | Prop `text` de `<TextPressure>` |
-| El color verde | `src/index.css` y `src/App.jsx` | `--green` y las props `raysColor` / `textColor` |
-| La intensidad del fondo | `src/App.jsx` | Props de `<LightRays>` |
+| El color verde | `src/index.css` y `src/App.jsx` | `--green` y las props `color` / `glowColor` |
+| La profundidad de las letras | `src/App.jsx` | Prop `depth` de `<Logo3D>` |
+| La intensidad del flotado | `src/App.jsx` | Prop `floatIntensity` de `<Logo3D>` |
+| La reacción al cursor | `src/App.jsx` | Prop `parallax` de `<Logo3D>` |
+| El material del logo | `src/App.jsx` | Props `metalness` y `roughness` de `<Logo3D>` |
+| La forma de las letras | `public/xignis-wordmark-mask.png` | Regenerar con `python3 scripts/build-logo-mask.py` |
 | El título de la pestaña o la descripción | `index.html` | `<title>` y `<meta name="description">` |
 | El favicon | `public/icon.png` | Reemplazar el archivo |
 
@@ -238,7 +258,15 @@ configuración adicional de rutas.
 - No hay formulario de contacto ni captura de correos.
 - No hay tests, linter ni comprobación de tipos configurados.
 - No hay integración continua ni despliegue automático.
-- El fondo depende de WebGL; en un navegador sin soporte no se dibuja.
+- El wordmark depende de WebGL; en un navegador sin soporte no se dibuja, aunque
+  el resto de la página (leyenda incluida) sigue visible.
+- Three.js pesa: el bundle sube a unos 168 kB comprimidos y Vite avisa por superar
+  el umbral de 500 kB sin comprimir. No hay code splitting.
+- La máscara del wordmark es un archivo generado y versionado. Si cambia
+  `public/icon.png`, hay que volver a ejecutar `scripts/build-logo-mask.py`;
+  si no, el 3D sigue mostrando la forma antigua.
+- `LightRays.jsx`, `LightRays.css` y `TextPressure.jsx` no se usan, y con ellos la
+  dependencia `ogl` sigue instalada pero sin ningún import que la necesite.
 - El repositorio no incluye archivo `LICENSE`, por lo que **no tiene una licencia pública declarada**.
 - El texto "Proximamente" aparece sin tilde en el código actual.
 

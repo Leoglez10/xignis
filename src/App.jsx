@@ -1,13 +1,13 @@
-import LightRays from './components/LightRays.jsx';
-import TextPressure from './components/TextPressure.jsx';
+import Logo3D from './components/Logo3D.jsx';
 
 const styles = {
   root: {
     position: 'relative',
     width: '100%',
-    height: '100%'
+    height: '100%',
+    overflow: 'hidden'
   },
-  background: {
+  stage: {
     position: 'absolute',
     inset: 0
   },
@@ -18,19 +18,11 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '1.5rem',
+    justifyContent: 'flex-end',
     pointerEvents: 'none'
   },
-  titleWrap: {
-    width: 'min(70vw, 520px)',
-    height: '120px'
-  },
   tagline: {
-    position: 'absolute',
-    bottom: '8%',
-    left: '50%',
-    transform: 'translateX(-50%)',
+    marginBottom: '8%',
     fontSize: 'clamp(0.75rem, 2vw, 1rem)',
     fontWeight: 400,
     letterSpacing: '0.45em',
@@ -43,35 +35,17 @@ const styles = {
 export default function App() {
   return (
     <div style={styles.root}>
-      <div style={styles.background}>
-        <LightRays
-          raysOrigin="top-center"
-          raysColor="#08EF01"
-          raysSpeed={0.6}
-          lightSpread={0.8}
-          rayLength={1.2}
-          fadeDistance={1}
-          saturation={1}
-          followMouse={true}
-          mouseInfluence={0.1}
-          noiseAmount={0.05}
-          distortion={0.05}
+      <div style={styles.stage}>
+        <Logo3D
+          color="#08EF01"
+          glowColor="#08EF01"
+          glow={true}
+          depth={0.42}
+          floatIntensity={1}
+          parallax={0.22}
         />
       </div>
       <main style={styles.overlay}>
-        <div style={styles.titleWrap}>
-          <TextPressure
-            text="Xignis"
-            textColor="#08EF01"
-            flex={true}
-            alpha={false}
-            stroke={false}
-            width={true}
-            weight={true}
-            italic={true}
-            minFontSize={36}
-          />
-        </div>
         <p style={styles.tagline}>Proximamente</p>
       </main>
     </div>
