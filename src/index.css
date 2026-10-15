@@ -21,3 +21,17 @@ body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   overflow: hidden;
 }
+
+/* Three.js sizes the canvas backing store by devicePixelRatio, so the element's
+   CSS box has to be pinned to the container. Without this the canvas lays out at
+   buffer size and overflows on high-DPI screens. */
+.logo-3d {
+  position: absolute;
+  inset: 0;
+}
+
+.logo-3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
