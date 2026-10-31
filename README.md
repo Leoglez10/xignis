@@ -13,6 +13,12 @@
 
 </div>
 
+<img src="docs/screenshots/desktop.png" alt="Landing de Xignis en escritorio" width="100%">
+
+<p align="center">
+  <img src="docs/screenshots/mobile.png" alt="Landing de Xignis en móvil" width="260">
+</p>
+
 ---
 
 ## 📋 Contenido
