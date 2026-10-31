@@ -13,6 +13,8 @@
 
 </div>
 
+> 🇬🇧 **In English:** Coming-soon landing page for Xignis with a floating 3D wordmark rendered in Three.js. React + Vite.
+
 <img src="docs/screenshots/desktop.png" alt="Landing de Xignis en escritorio" width="100%">
 
 <p align="center">
